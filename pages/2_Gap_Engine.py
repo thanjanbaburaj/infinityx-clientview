@@ -1,41 +1,38 @@
 import streamlit as st
-from utils.sheets_clientview import load_sheet_as_df
+from utils.sheets_clientview import load_sheet
 
 SPREADSHEET_NAME = "Infinity-X Backend"
 TAB_FACT_FIND = "Financial_Fact_Find"
 
 st.title("Gap Engine (ClientView)")
-st.markdown("Quickly explore protection and planning gaps based on the fact-find.")
+st.markdown("Explore risks and shortfalls based on the fact-find.")
 
 client_id = st.text_input("Client ID")
 
 if client_id:
-    df = load_sheet_as_df(SPREADSHEET_NAME, TAB_FACT_FIND)
-    row = df[df["ClientID"] == client_id] if not df.empty else None
+    records = load_sheet(SPREADSHEET_NAME, TAB_FACT_FIND)
+    row = next((r for r in records if str(r.get("ClientID", "")) == client_id), None)
 
-    if row is None or row.empty:
-        st.warning("No fact-find data found for this Client ID yet.")
+    if not row:
+        st.warning("No fact-find data found for this Client ID.")
     else:
-        r = row.iloc[0]
         st.subheader("Current Snapshot")
         col1, col2 = st.columns(2)
         with col1:
-            st.write(f"Income: {r.get('Income', '')}")
-            st.write(f"Expenses: {r.get('Expenses', '')}")
-            st.write(f"Assets: {r.get('Assets', '')}")
+            st.write(f"Income: {row.get('Income', '')}")
+            st.write(f"Expenses: {row.get('Expenses', '')}")
+            st.write(f"Assets: {row.get('Assets', '')}")
         with col2:
-            st.write(f"Liabilities: {r.get('Liabilities', '')}")
-            st.write(f"Dependents: {r.get('Dependents', '')}")
-            st.write(f"Retirement Age: {r.get('RetirementAge', '')}")
+            st.write(f"Liabilities: {row.get('Liabilities', '')}")
+            st.write(f"Dependents: {row.get('Dependents', '')}")
+            st.write(f"Retirement Age: {row.get('RetirementAge', '')}")
 
-        st.subheader("Gap Narrative")
-        st.write("Use this section live with the client to talk through:")
+        st.subheader("Gap Conversation")
         st.markdown("""
-        - What happens if income stops?
-        - How long can current assets sustain the family?
-        - Are major goals (education, retirement) fully funded?
-        """)
-
-        notes = st.text_area("Talking points / notes (for you, not saved here)")
+- What happens if income stops?
+- How long can current assets sustain the family?
+- Are major goals (education, retirement) fully funded?
+""")
+        st.text_area("Talking points (not saved):")
 else:
     st.info("Enter a Client ID to load gap context.")

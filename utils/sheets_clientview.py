@@ -9,17 +9,17 @@ SCOPE = [
 
 @st.cache_resource
 def get_client():
-    info = st.secrets["gcp_service_account"]   # ← USE TOML BLOCK DIRECTLY
+    info = st.secrets["gcp_service_account"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(info, SCOPE)
     return gspread.authorize(creds)
 
-def append_row(sheet_name, tab_name, row_values):
+def append_row(tab_name, row_values):
     gc = get_client()
     sh = gc.open_by_key(st.secrets["spreadsheet_id"])
     ws = sh.worksheet(tab_name)
     ws.append_row(row_values)
 
-def load_sheet(sheet_name, tab_name):
+def load_sheet(tab_name):
     gc = get_client()
     sh = gc.open_by_key(st.secrets["spreadsheet_id"])
     ws = sh.worksheet(tab_name)

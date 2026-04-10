@@ -10,7 +10,7 @@ st.markdown("Explore risks and shortfalls based on the fact-find.")
 client_id = st.text_input("Client ID")
 
 if client_id:
-    records = load_sheet(SPREADSHEET_NAME, TAB_FACT_FIND)
+    records = load_sheet("Financial_Fact_Find")
     row = next((r for r in records if str(r.get("ClientID", "")) == client_id), None)
 
     if not row:

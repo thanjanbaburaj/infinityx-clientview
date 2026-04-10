@@ -1,6 +1,5 @@
 import json
 import gspread
-import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 import streamlit as st
 
@@ -10,24 +9,20 @@ SCOPE = [
 ]
 
 @st.cache_resource
-def get_gspread_client():
+def get_client():
     raw = st.secrets["GOOGLE_SERVICE_ACCOUNT_JSON"]
     info = json.loads(raw)
     creds = ServiceAccountCredentials.from_json_keyfile_dict(info, SCOPE)
     return gspread.authorize(creds)
 
-@st.cache_data
-def load_sheet_as_df(spreadsheet_name: str, tab_name: str):
-    gc = get_gspread_client()
-    sh = gc.open(spreadsheet_name)
-    ws = sh.worksheet(tab_name)
-    data = ws.get_all_records()
-    if not data:
-        return pd.DataFrame()
-    return pd.DataFrame(data)
-
-def append_row(spreadsheet_name: str, tab_name: str, row_values: list):
-    gc = get_gspread_client()
-    sh = gc.open(spreadsheet_name)
+def append_row(sheet_name, tab_name, row_values):
+    gc = get_client()
+    sh = gc.open(sheet_name)
     ws = sh.worksheet(tab_name)
     ws.append_row(row_values)
+
+def load_sheet(sheet_name, tab_name):
+    gc = get_client()
+    sh = gc.open(sheet_name)
+    ws = sh.worksheet(tab_name)
+    return ws.get_all_records()

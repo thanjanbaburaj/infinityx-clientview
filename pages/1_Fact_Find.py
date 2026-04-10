@@ -49,5 +49,5 @@ if st.button("Save Fact-Find"):
         "",  # LastUpdated
     ]
 
-    append_row(SPREADSHEET_NAME, TAB_FACT_FIND, row)
+    append_row("Financial_Fact_Find", row)
     st.success(f"Fact-Find saved for Client ID: {client_id}")

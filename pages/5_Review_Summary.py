@@ -5,9 +5,18 @@ from datetime import datetime
 
 st.set_page_config(page_title="Review Summary", page_icon="🧭", layout="wide")
 
+# -----------------------------
+# Helpers
+# -----------------------------
 def safe_get(row, key, default=""):
     v = row.get(key, default)
     return v if v not in ["", None] else default
+
+def safe_float(v):
+    try:
+        return float(v) if v not in ["", None] else 0.0
+    except:
+        return 0.0
 
 def now_str():
     return datetime.now().strftime("%d %b %Y, %I:%M %p")
@@ -30,9 +39,15 @@ def build_client_friendly_summary(name, arch_points, focus_points, next_steps):
         lines.append(f"• {p}")
     return "\n".join(lines)
 
+# -----------------------------
+# Page Title
+# -----------------------------
 st.title("🧭 Your Review Summary")
 st.caption("A simple, visual review of your current plan and agreed next steps.")
 
+# -----------------------------
+# Client ID
+# -----------------------------
 query_params = st.query_params
 client_id_from_url = query_params.get("client_id", "")
 
@@ -41,6 +56,9 @@ if not client_id:
     st.info("Please enter your Client ID to view your review summary.")
     st.stop()
 
+# -----------------------------
+# Load Fact Find
+# -----------------------------
 records = load_sheet("Financial_Fact_Find")
 df = pd.DataFrame(records)
 
@@ -54,7 +72,36 @@ client_name = safe_get(client_row, "FullName", "Client")
 
 st.markdown(f"### Hello, **{client_name}**")
 
+# -----------------------------
+# Existing Portfolio Section
+# -----------------------------
+st.subheader("Your Existing Portfolio")
+
+policies = load_sheet("Policies")
+client_policies = [p for p in policies if str(p.get("ClientID", "")) == str(client_id)]
+
+if not client_policies:
+    st.write("No existing policies found.")
+else:
+    for p in client_policies:
+        st.markdown(f"""
+**{p.get('Carrier', '')} – {p.get('Product', '')}**
+
+• Policy Number: {p.get('PolicyNumber', '')}  
+• Life Cover: USD {p.get('LifeCover', '0')}  
+• Critical Illness: USD {p.get('CICover', '0')}  
+• Disability: USD {p.get('DisabilityCover', '0')}  
+• Current Value: USD {p.get('CurrentValue', '0')}  
+• Premium: {p.get('Premium', '')} {p.get('Frequency', '')}  
+""")
+
+st.markdown("---")
+
+# -----------------------------
+# Architecture Section
+# -----------------------------
 st.subheader("Your Financial Architecture")
+
 must_points = ["Strengthen family protection", "Build emergency buffer"]
 should_points = ["Improve CI protection", "Start education funding", "Improve retirement funding"]
 could_points = ["Accelerate wealth building", "Explore legacy planning"]
@@ -64,20 +111,31 @@ with col1:
     st.markdown("#### MUST")
     for p in must_points:
         st.write(f"• {p}")
+
 with col2:
     st.markdown("#### SHOULD")
     for p in should_points:
         st.write(f"• {p}")
+
 with col3:
     st.markdown("#### COULD")
     for p in could_points:
         st.write(f"• {p}")
 
+st.markdown("---")
+
+# -----------------------------
+# Next Steps
+# -----------------------------
 st.subheader("Next Steps")
+
 next_steps = ["Review options", "Confirm priorities", "Implement plan"]
 for p in next_steps:
     st.write(f"• {p}")
 
+# -----------------------------
+# WhatsApp Summary
+# -----------------------------
 summary_text = build_client_friendly_summary(
     name=client_name,
     arch_points=must_points + should_points + could_points,
